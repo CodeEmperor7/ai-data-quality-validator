@@ -10,9 +10,10 @@ from great_expectations.cli import cli
 from great_expectations.data_context.util import file_relative_path
 from great_expectations.util import gen_directory_tree_str
 from tests.cli.test_cli import yaml
+from tests.cli.utils import assert_no_logging_messages_or_tracebacks
 
 
-def test_cli_init_on_new_project(tmp_path_factory):
+def test_cli_init_on_new_project(caplog, tmp_path_factory):
     basedir = str(tmp_path_factory.mktemp("test_cli_init_diff"))
     os.makedirs(os.path.join(basedir, "data"))
     data_path = os.path.join(basedir, "data/Titanic.csv")
@@ -160,10 +161,12 @@ great_expectations/
 """
     )
 
+    assert_no_logging_messages_or_tracebacks(caplog, result)
+
 
 # TODO this test is failing because the behavior is broken
 def test_init_on_existing_project_with_no_datasources_should_add_one(
-    initialized_project,
+    caplog, initialized_project,
 ):
     project_dir = initialized_project
     ge_dir = os.path.join(project_dir, DataContext.GE_DIR)
@@ -188,6 +191,8 @@ def test_init_on_existing_project_with_no_datasources_should_add_one(
 
     config = _load_config_file(os.path.join(ge_dir, DataContext.GE_YML))
     assert "my_data_dir" in config["datasources"].keys()
+
+    assert_no_logging_messages_or_tracebacks(caplog, result)
 
 
 def _remove_all_datasources(ge_dir):
@@ -236,7 +241,7 @@ def initialized_project(tmp_path_factory):
 
 
 def test_init_on_existing_project_with_multiple_datasources_exist_do_nothing(
-    initialized_project, filesystem_csv_2
+    caplog, initialized_project, filesystem_csv_2
 ):
     project_dir = initialized_project
     ge_dir = os.path.join(project_dir, DataContext.GE_DIR)
@@ -263,9 +268,11 @@ def test_init_on_existing_project_with_multiple_datasources_exist_do_nothing(
     assert "appears complete" in stdout
     assert "Would you like to build & view this project's Data Docs" in stdout
 
+    assert_no_logging_messages_or_tracebacks(caplog, result)
+
 
 def test_init_on_existing_project_with_datasource_with_existing_suite_offer_to_build_docs(
-    initialized_project,
+    caplog, initialized_project,
 ):
     project_dir = initialized_project
 
@@ -282,9 +289,11 @@ def test_init_on_existing_project_with_datasource_with_existing_suite_offer_to_b
     assert "appears complete" in stdout
     assert "Would you like to build & view this project's Data Docs" in stdout
 
+    assert_no_logging_messages_or_tracebacks(caplog, result)
+
 
 def test_init_on_existing_project_with_datasource_with_no_suite_create_one(
-    initialized_project,
+    caplog, initialized_project,
 ):
     project_dir = initialized_project
     ge_dir = os.path.join(project_dir, DataContext.GE_DIR)
@@ -319,6 +328,8 @@ def test_init_on_existing_project_with_datasource_with_no_suite_create_one(
     assert "The following Data Docs sites were built" in stdout
     assert "Great Expectations is now set up" in stdout
     assert "A new Expectation suite 'warning' was added to your project" in stdout
+
+    assert_no_logging_messages_or_tracebacks(caplog, result)
 
 
 def _delete_and_recreate_dir(directory):
