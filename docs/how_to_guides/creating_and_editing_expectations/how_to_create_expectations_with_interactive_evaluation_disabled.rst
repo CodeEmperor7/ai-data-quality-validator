@@ -1,76 +1,15 @@
-.. _data_asset_features:
+.. _how_to_guides__creating_and_editing_expectations__how_to_create_expectations_with_interactive_evaluation_disabled:
 
-###############################################################
 How to create Expectations with interactive evaluation disabled
-###############################################################
+===============================================================
 
-Setting the `interactive_evaluation` flag on a DataAsset to false makes it possible to declare expectations and store
-expectations without immediately evaluating them. When interactive evaluation is disabled, the running an
-expectation method on a DataAsset will return the configuration just added to its expectation suite rather than a
-result object.
+.. admonition:: Admonition from Mr. Dickens
 
-At initialization
-=================
-
-.. code-block:: python
-
-    import great_expectations as ge
-    import pandas as pd
-    df = pd.read_csv("../tests/examples/titanic.csv")
-    ge_df = ge.dataset.PandasDataset(df, interactive_evaluation=False)
-    ge_df.expect_column_values_to_be_in_set('Sex', ["male", "female"])
-
-    {
-        'stored_configuration': {
-            'expectation_type': 'expect_column_values_to_be_in_set',
-            'kwargs': {
-                'column': 'Sex',
-                'value_set': ['male', 'female'],
-                'result_format': 'BASIC'
-            }
-        }
-    }
-
-Dynamically adjusting interactive evaluation
-============================================
-
-.. code-block:: python
-
-    >> import great_expectations as ge
-    >> import pandas as pd
-    >> df = pd.read_csv("./tests/examples/titanic.csv")
-    >> ge_df = ge.dataset.PandasDataset(df, interactive_evaluation=True)
-    >> ge_df.expect_column_values_to_be_in_set('Sex', ["male", "female"])
-
-    {
-        'success': True,
-        'result': {
-            'element_count': 1313,
-            'missing_count': 0,
-            'missing_percent': 0.0,
-            'unexpected_count': 0,
-            'unexpected_percent': 0.0,
-            'unexpected_percent_nonmissing': 0.0,
-            'partial_unexpected_list': []
-        }
-    }
-
-    >> ge_df.set_config_value("interactive_evaluation", False)
-    >> ge_df.expect_column_values_to_be_in_set("PClass", ["1st", "2nd", "3rd"])
-
-    {
-      'stored_configuration': {
-        'expectation_type': 'expect_column_values_to_be_in_set',
-        'kwargs': {
-          'column': 'PClass',
-          'value_set': [
-            '1st',
-            '2nd',
-            '3rd'
-          ],
-          'result_format': 'BASIC'
-        }
-      }
-    }
+    "Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show."
 
 
+This guide is a stub. We all know that it will be useful, but no one has made time to write it yet.
+
+If it would be useful to you, please comment and/or upvote below.
+
+If you want to be a real hero, we'd welcome a pull request. Please see :ref:`the Contributing tutorial <tutorials__contributing>` and :ref:`How to write a how to guide` to get started.
