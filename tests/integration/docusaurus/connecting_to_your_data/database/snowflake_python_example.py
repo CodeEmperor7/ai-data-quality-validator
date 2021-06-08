@@ -29,7 +29,7 @@ datasource_config = {
     "class_name": "Datasource",
     "execution_engine": {
         "class_name": "SqlAlchemyExecutionEngine",
-        "connection_string": "snowflake://<USER_NAME>:<PASSWORD>@<ACCOUNT_NAME>/<DATABASE_NAME>/<SCHEMA_NAME>?warehouse=<WAREHOUSE_NAME>&role=<ROLE_NAME",
+        "connection_string": "snowflake://<USER_NAME>:<PASSWORD>@<ACCOUNT_NAME>/<DATABASE_NAME>/<SCHEMA_NAME>?warehouse=<WAREHOUSE_NAME>&role=<ROLE_NAME>",
     },
     "data_connectors": {
         "default_runtime_data_connector_name": {
