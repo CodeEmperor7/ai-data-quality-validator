@@ -3,18 +3,13 @@ import os
 import re
 from typing import List, Optional
 
-try:
-    from azure.storage.blob import BlobServiceClient
-except ImportError:
-    BlobServiceClient = None
-
 import great_expectations.exceptions as ge_exceptions
 from great_expectations.core.batch import BatchDefinition
 from great_expectations.core.batch_spec import AzureBatchSpec, PathBatchSpec
-from great_expectations.datasource.data_connector import (
+from great_expectations.datasource.data_connector.asset import Asset
+from great_expectations.datasource.data_connector.configured_asset_file_path_data_connector import (
     ConfiguredAssetFilePathDataConnector,
 )
-from great_expectations.datasource.data_connector.asset import Asset
 from great_expectations.datasource.data_connector.util import list_azure_keys
 from great_expectations.execution_engine import (
     ExecutionEngine,
@@ -23,6 +18,14 @@ from great_expectations.execution_engine import (
 )
 
 logger = logging.getLogger(__name__)
+
+try:
+    from azure.storage.blob import BlobServiceClient
+except ImportError:
+    BlobServiceClient = None
+    logger.debug(
+        "Unable to load BlobServiceClient connection object; install optional Azure Storage Blob dependency for support"
+    )
 
 
 class ConfiguredAssetAzureDataConnector(ConfiguredAssetFilePathDataConnector):
