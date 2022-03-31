@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 
+import great_expectations.exceptions as ge_exceptions
 from great_expectations.core.batch import Batch, BatchRequest, RuntimeBatchRequest
 from great_expectations.execution_engine.execution_engine import MetricDomainTypes
 from great_expectations.rule_based_profiler.domain_builder import ColumnDomainBuilder
@@ -22,7 +23,7 @@ class MultiColumnDomainBuilder(ColumnDomainBuilder):
     ):
         """
         Args:
-            include_column_names: Explicitly specified desired columns (if None, it is computed based on active Batch).
+            include_column_names: Explicitly specified desired columns.
             batch_list: explicitly specified Batch objects for use in DomainBuilder
             batch_request: BatchRequest to be optionally used to define batches to consider for this domain builder.
             data_context: DataContext associated with this profiler.
@@ -66,6 +67,11 @@ class MultiColumnDomainBuilder(ColumnDomainBuilder):
             validator=validator,
             variables=variables,
         )
+
+        if not (self.include_column_names and effective_column_names):
+            raise ge_exceptions.ProfilerExecutionError(
+                message=f'Error: "column_list" in {self.__class__.__name__} must not be empty.'
+            )
 
         domains: List[Domain] = [
             Domain(
