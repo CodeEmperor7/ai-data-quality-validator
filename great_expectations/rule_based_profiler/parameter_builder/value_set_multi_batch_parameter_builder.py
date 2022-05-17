@@ -105,6 +105,7 @@ class ValueSetMultiBatchParameterBuilder(MetricMultiBatchParameterBuilder):
             variables=variables,
             parameters=parameters,
             parameter_computation_impl=super()._build_parameters,
+            json_serialize=None,
             recompute_existing_parameter_values=recompute_existing_parameter_values,
         )
 
