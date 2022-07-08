@@ -25,9 +25,11 @@ if __name__ == "test_script_module":
     table_name: str = loaded_table.table_name
     test_df: pd.DataFrame = loaded_table.inserted_dataframe
 
+    test_column_name: str = "pickup_datetime"
+
     taxi_test_data: TaxiTestData = TaxiTestData(
         test_df=test_df,
-        test_column_name="pickup_datetime",
+        test_column_name=test_column_name,
     )
     taxi_splitting_test_cases: TaxiSplittingTestCasesBase = (
         TaxiSplittingTestCasesDateTime(taxi_test_data=taxi_test_data)
