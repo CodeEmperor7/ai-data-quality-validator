@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Type, Union
 from great_expectations.compatibility.typing_extensions import override
 from great_expectations.expectations.expectation import (
     ColumnAggregateExpectation,
+    parse_value_to_observed_type,
     render_suite_parameter_string,
 )
 from great_expectations.expectations.metadata_types import DataQualityIssues
@@ -372,9 +373,14 @@ class ExpectColumnDistinctValuesToEqualSet(ColumnAggregateExpectation):
         observed_value_set = set(observed_value_counts.index)
         value_set = self._get_success_kwargs()["value_set"]
 
-        parsed_value_set = value_set
-
-        expected_value_set = set(parsed_value_set)
+        # Try to coerce string values to match the type of observed values
+        if observed_value_set and value_set:
+            first_observed = next(iter(observed_value_set))
+            expected_value_set = {
+                parse_value_to_observed_type(first_observed, value) for value in value_set
+            }
+        else:
+            expected_value_set = set(value_set)
 
         return {
             "success": observed_value_set == expected_value_set,
