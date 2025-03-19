@@ -430,20 +430,24 @@ class ExpectColumnDistinctValuesToEqualSet(ColumnAggregateExpectation):
             param_prefix=ov_param_prefix,
             renderer_configuration=renderer_configuration,
         )
-
-        expected_value_set = set(renderer_configuration.kwargs.get("value_set", []))
         observed_value_set = set(
             result.get("result", {}).get("observed_value", []) if result else []
         )
+        sample_observed_value = next(iter(observed_value_set)) if observed_value_set else None
+        expected_value_set = {
+            parse_value_to_observed_type(observed_value=sample_observed_value, value=value)
+            for value in renderer_configuration.kwargs.get("value_set", [])
+        }
 
         observed_values = (
-            (name, sch)
-            for name, sch in renderer_configuration.params
+            (name, schema)
+            for name, schema in renderer_configuration.params
             if name.startswith(ov_param_prefix)
         )
+
         expected_values = (
-            (name, sch)
-            for name, sch in renderer_configuration.params
+            (name, schema)
+            for name, schema in renderer_configuration.params
             if name.startswith(expected_param_prefix)
         )
 
@@ -458,7 +462,11 @@ class ExpectColumnDistinctValuesToEqualSet(ColumnAggregateExpectation):
             template_str_list.append(f"${name}")
 
         for name, schema in expected_values:
-            if schema.value not in observed_value_set:
+            coerced_value = parse_value_to_observed_type(
+                observed_value=sample_observed_value,
+                value=schema.value,
+            )
+            if coerced_value not in observed_value_set:
                 renderer_configuration.params.__dict__[
                     name
                 ].render_state = ObservedValueRenderState.MISSING.value
