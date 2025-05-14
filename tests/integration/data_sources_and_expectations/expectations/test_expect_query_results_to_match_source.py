@@ -5,6 +5,16 @@ import pytest
 
 import great_expectations.expectations as gxe
 from great_expectations.expectations.metrics.util import MAX_RESULT_RECORDS
+from great_expectations.render.components import (
+    AtomicDiagnosticRendererType,
+    RenderedAtomicContent,
+    RenderedAtomicValue,
+)
+from great_expectations.render.renderer_configuration import (
+    RendererSchema,
+    RendererTableValue,
+    RendererValueType,
+)
 from tests.integration.conftest import (
     MultiSourceBatch,
     MultiSourceTestConfig,
@@ -443,3 +453,139 @@ def test_expect_query_results_to_match_source_error(multi_source_batch: MultiSou
     )
     assert not result.success
     assert list(result.exception_info.values())[0]["raised_exception"]
+
+
+DATA_WITH_MANY_COLUMNS = pd.DataFrame({ch: [1, 2, 3] for ch in "abcdefgh"})
+OTHER_DATA_WITH_MANY_COLUMNS = pd.DataFrame({ch: [4, 5, 6] for ch in "abcdefgh"})
+
+
+@multi_source_batch_setup(
+    multi_source_test_configs=SQLITE_ONLY,
+    target_data=DATA_WITH_MANY_COLUMNS,
+    source_data=DATA_WITH_MANY_COLUMNS,
+)
+def test_rendering_no_differences(multi_source_batch: MultiSourceBatch):
+    """NOTE: the queries here use kinda weird ordering to ensure that our output table
+    actually reflects the right order.
+    """
+    source_table = multi_source_batch.source_table_name
+    result = multi_source_batch.target_batch.validate(
+        gxe.ExpectQueryResultsToMatchSource(
+            target_query="SELECT e, a, d, g, b, e FROM {batch} ORDER BY e",
+            source_data_source_name=multi_source_batch.source_data_source_name,
+            source_query=f"SELECT g, d, g, c, e, a  FROM {source_table} ORDER BY g",
+        )
+    )
+    result.render()
+
+    assert result.rendered_content == [
+        RenderedAtomicContent(
+            name=AtomicDiagnosticRendererType.OBSERVED_VALUE,
+            value=RenderedAtomicValue(
+                template="Unexpected records: $row_count",
+                params={
+                    "row_count": {
+                        "schema": RendererSchema(type=RendererValueType.NUMBER),
+                        "value": 0,
+                    }
+                },
+            ),
+            value_type="TableType",
+        ),
+        RenderedAtomicContent(
+            name=AtomicDiagnosticRendererType.OBSERVED_VALUE,
+            value=RenderedAtomicValue(
+                template="Missing records: $row_count",
+                params={
+                    "row_count": {
+                        "schema": RendererSchema(type=RendererValueType.NUMBER),
+                        "value": 0,
+                    }
+                },
+            ),
+            value_type="TableType",
+        ),
+    ]
+
+
+@multi_source_batch_setup(
+    multi_source_test_configs=SQLITE_ONLY,
+    target_data=DATA_WITH_MANY_COLUMNS,
+    source_data=OTHER_DATA_WITH_MANY_COLUMNS,
+)
+def test_rendering_with_missing_and_unexpected(multi_source_batch: MultiSourceBatch):
+    """NOTE: the queries here use kinda weird ordering to ensure that our output table
+    actually reflects the right order.
+    """
+    source_table = multi_source_batch.source_table_name
+    result = multi_source_batch.target_batch.validate(
+        gxe.ExpectQueryResultsToMatchSource(
+            target_query="SELECT a, b, c, d FROM {batch} ORDER BY e",
+            source_data_source_name=multi_source_batch.source_data_source_name,
+            source_query=f"SELECT e, f, g, h  FROM {source_table} ORDER BY g",
+        )
+    )
+    result.render()
+
+    assert result.rendered_content == [
+        RenderedAtomicContent(
+            name=AtomicDiagnosticRendererType.OBSERVED_VALUE,
+            value=RenderedAtomicValue(
+                template="Unexpected records: $row_count",
+                params={
+                    "row_count": {
+                        "schema": RendererSchema(type=RendererValueType.NUMBER),
+                        "value": 3,
+                    }
+                },
+                header_row=[
+                    RendererTableValue(
+                        schema=RendererSchema(type=RendererValueType.STRING),
+                        value=col_name,
+                    )
+                    for col_name in ["a", "b", "c", "d"]
+                ],
+                table=[
+                    [
+                        RendererTableValue(
+                            schema=RendererSchema(type=RendererValueType.NUMBER),
+                            value=value,
+                        )
+                        for _ in ["a", "b", "c", "d"]
+                    ]
+                    for value in [1, 2, 3]
+                ],
+            ),
+            value_type="TableType",
+        ),
+        RenderedAtomicContent(
+            name=AtomicDiagnosticRendererType.OBSERVED_VALUE,
+            value=RenderedAtomicValue(
+                template="Missing records: $row_count",
+                params={
+                    "row_count": {
+                        "schema": RendererSchema(type=RendererValueType.NUMBER),
+                        "value": 3,
+                    }
+                },
+                header_row=[
+                    RendererTableValue(
+                        schema=RendererSchema(type=RendererValueType.STRING),
+                        value=col_name,
+                    )
+                    for col_name in ["e", "f", "g", "h"]
+                ],
+                table=[
+                    [
+                        RendererTableValue(
+                            schema=RendererSchema(type=RendererValueType.NUMBER),
+                            value=value,
+                        )
+                        for _ in ["e", "f", "g", "h"]
+                    ]
+                    for value in [4, 5, 6]
+                ],
+            ),
+            value_type="TableType",
+        ),
+    ]
