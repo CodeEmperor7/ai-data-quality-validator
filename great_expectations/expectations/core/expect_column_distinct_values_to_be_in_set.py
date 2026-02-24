@@ -39,6 +39,7 @@ from great_expectations.render.renderer_configuration import (
     RendererValueType,
 )
 from great_expectations.render.util import (
+    coerce_stringdtype_to_object,
     parse_row_condition_string,
     substitute_none_for_missing,
 )
@@ -406,6 +407,7 @@ class ExpectColumnDistinctValuesToBeInSet(ColumnAggregateExpectation):
                 "count": counts,
             }
         )
+        coerce_stringdtype_to_object(df)
 
         if len(values) > 60:  # noqa: PLR2004 # FIXME CoP
             return None
